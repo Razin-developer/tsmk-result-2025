@@ -1,0 +1,12 @@
+{
+  "name": "madrasa-result",
+  "version": "1.0.0",
+  "description": "result publication site for tsm kandamanagalam",
+  "main": "./backend/index.js",
+  "scripts": {
+    "start": "node ./backend/index",
+    "build": "npm i --prefix backend && npm i --prefix backend && npm run build --prefix frontend"
+  },
+  "author": "",
+  "license": "ISC"
+}
