@@ -23,6 +23,7 @@ const Navbar = () => {
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="md:hidden focus:outline-none"
+          aria-label="Toggle navigation"
         >
           {isOpen ? (
             <X className="size-6 text-gray-300" />
