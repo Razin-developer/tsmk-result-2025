@@ -1,10 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useResultStore } from "../store/useResultStore";
 import { Link } from "react-router-dom";
 
 const ResultPage = () => {
   const { resultOfOne } = useResultStore();
+
+  useEffect(() => {
+    console.log(resultOfOne);
+    
+  })
 
   if (resultOfOne) {
     return (

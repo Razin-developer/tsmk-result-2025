@@ -3,25 +3,62 @@ import { motion } from "framer-motion";
 import { User, Search, Loader2 } from "lucide-react";
 import { useResultStore } from "../store/useResultStore";
 import { useNavigate } from "react-router-dom";
+import { axiosInstance } from "../lib/axios";
+import { toast } from "react-hot-toast";
 
 const HomePage = () => {
   const [selectedClass, setSelectedClass] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormdata] = useState({ class: "", name: "" });
-  const navigate = useNavigate()
-  const { studentsOfAClass, isLoadingStudents, isLoadingResult, getStudentsFromAClass, getResultOfOne } = useResultStore();
+  const [formData, setFormData] = useState({ class: "", name: "" });
+  const navigate = useNavigate();
+  const [studentsOfAClass, setStudentsOfAClass] = useState([]);
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+  const { setResultOfOne } = useResultStore();
 
   useEffect(() => {
-    setFormdata((prev) => ({ ...prev, class: selectedClass }));
-    getStudentsFromAClass(selectedClass);
+    if (selectedClass) {
+      setFormData((prev) => ({ ...prev, class: selectedClass }));
+      getStudentsFromAClass(selectedClass);
+    }
   }, [selectedClass]);
+
+  const getStudentsFromAClass = async (classId) => {
+    setIsLoadingStudents(true);
+    try {
+      const res = await axiosInstance.get(`/result/${classId}`);
+      setStudentsOfAClass(res.data);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      setStudentsOfAClass([]);
+      toast.error("Failed to fetch students.");
+    } finally {
+      setIsLoadingStudents(false);
+    }
+  };
+
+  const getResultOfOne = async ({ name, classId }) => {
+    try {
+      const res = await axiosInstance.get(`/result/${classId}/${name}`);
+      console.log(res.data);
+      
+      setResultOfOne(res.data);
+      navigate("/result");
+    } catch (error) {
+      console.error("Error fetching result:", error);
+      toast.error(error?.response?.data?.message || "Something went wrong!");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.name) {
+      toast.warn("Please select a student.");
+      return;
+    }
+
     setIsSubmitting(true);
     await getResultOfOne({ name: formData.name, classId: selectedClass });
     setIsSubmitting(false);
-    navigate('/result')
   };
 
   return (
@@ -44,6 +81,7 @@ const HomePage = () => {
         </motion.h4>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* Class Selection */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -51,7 +89,9 @@ const HomePage = () => {
             className="form-control"
           >
             <label className="label">
-              <span className="label-text text-gray-300 font-medium">Select Class</span>
+              <span className="label-text text-gray-300 font-medium">
+                Select Class
+              </span>
             </label>
             <div className="relative">
               <User className="absolute left-3 top-3 size-5 text-gray-500" />
@@ -62,12 +102,15 @@ const HomePage = () => {
               >
                 <option value="">Choose a class</option>
                 {[1, 2, 3, 4, 6, 8, 9].map((num) => (
-                  <option key={num} value={num}>{num}</option>
+                  <option key={num} value={num}>
+                    {num}
+                  </option>
                 ))}
               </select>
             </div>
           </motion.div>
 
+          {/* Student Selection */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -75,7 +118,9 @@ const HomePage = () => {
             className="form-control"
           >
             <label className="label">
-              <span className="label-text text-gray-300 font-medium">Select Student</span>
+              <span className="label-text text-gray-300 font-medium">
+                Select Student
+              </span>
             </label>
             <div className="relative">
               <User className="absolute left-3 top-3 size-5 text-gray-500" />
@@ -83,16 +128,25 @@ const HomePage = () => {
                 className="input input-bordered w-full pl-10 bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!selectedClass || isLoadingStudents}
                 value={formData.name}
-                onChange={(e) => setFormdata((p) => ({ ...p, name: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                }
               >
-                <option value="">{isLoadingStudents ? "Loading students..." : "Choose a student"}</option>
-                {studentsOfAClass && studentsOfAClass.map((student, index) => (
-                  <option key={index} value={student.studentName}>{index + 1}. {student.studentName}</option>
+                <option value="">
+                  {isLoadingStudents
+                    ? "Loading students..."
+                    : "Choose a student"}
+                </option>
+                {studentsOfAClass.map((student, index) => (
+                  <option key={index} value={student.studentName}>
+                    {index + 1}. {student.studentName}
+                  </option>
                 ))}
               </select>
             </div>
           </motion.div>
 
+          {/* Submit Button */}
           <motion.button
             whileTap={{ scale: 0.95 }}
             whileHover={{ scale: 1.1 }}

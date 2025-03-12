@@ -81,7 +81,7 @@ export const getStudentResult = async (req, res) => {
 
   
       newResultObj = {
-        ...studentResult["_doc"], rank, totalStudents: students.length
+        ...studentResult["_doc"], rank, totalStudents: students ? students.length : allStudents.length
       }
     } else {
       newResultObj = {
